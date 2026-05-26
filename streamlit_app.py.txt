@@ -1,0 +1,51 @@
+import streamlit as st
+import requests
+import time
+
+st.set_page_config(page_title="AI音乐创作室", page_icon="🎵")
+st.title("🎵 AI音乐创作室")
+
+with st.sidebar:
+    st.header("⚙️ 设置")
+    api_key = st.text_input("请输入你的 Mureka API Key", type="password")
+
+topic = st.text_input("歌曲主题", placeholder="例如：夏天、阳光")
+style = st.selectbox("音乐风格", ["pop", "rock", "electronic"])
+
+if st.button("✨ 开始创作"):
+    if not api_key:
+        st.error("请输入 API Key")
+    elif not topic:
+        st.error("请输入主题")
+    else:
+        lyrics = f"""[Verse]
+{topic}的风 轻轻吹过
+唤醒心中 沉睡的梦
+
+[Chorus]
+让全世界 听见这旋律
+属于我们 灿烂的奇迹"""
+
+        with st.spinner("AI创作中..."):
+            headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+            data = {"lyrics": lyrics, "model": "auto", "prompt": f"{style}, {topic}"}
+            resp = requests.post("https://api.mureka.ai/v1/song/generate", headers=headers, json=data, timeout=60)
+            
+            if resp.status_code == 200:
+                task_id = resp.json().get("id")
+                if task_id:
+                    for i in range(40):
+                        time.sleep(3)
+                        query_resp = requests.get(f"https://api.mureka.ai/v1/song/query/{task_id}", headers={"Authorization": f"Bearer {api_key}"})
+                        if query_resp.status_code == 200:
+                            data = query_resp.json()
+                            if data.get("status") == "succeeded":
+                                choices = data.get("choices", [])
+                                if choices:
+                                    audio_url = choices[0].get("url")
+                                    st.success("✅ 创作完成！")
+                                    st.audio(audio_url, format="audio/mp3")
+                                    st.markdown(f"[📥 下载]({audio_url})")
+                                    break
+            else:
+                st.error("提交失败")

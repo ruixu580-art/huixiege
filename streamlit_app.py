@@ -203,6 +203,29 @@ with st.sidebar:
         st.success("✅ API Key 已配置")
     else:
         st.error("❌ API Key 未配置")
+            # --- 在这里插入购买套餐的代码 ---
+    st.markdown("---")
+    st.subheader("💰 升级套餐")
+    st.caption("选择套餐，扫码支付后自动获取次数")
+
+    # 定义套餐和对应的链接密钥
+    plans = {
+        "🎵 单次体验 (2.99元)": "MIANBAODUO_URL_SINGLE",
+        "📦 20次套餐 (29.9元)": "MIANBAODUO_URL_PACK",
+        "🌟 年卡会员 (299元)": "MIANBAODUO_URL_YEAR",
+        "💎 终身会员 (699元)": "MIANBAODUO_URL_LIFETIME",
+    }
+
+    # 循环生成购买按钮
+    for plan_name, secret_key in plans.items():
+        # 从 st.secrets 中安全地读取链接
+        pay_url = st.secrets.get(secret_key)
+        if pay_url:
+            # 使用 st.link_button 创建一个点击后跳转到支付页面的按钮
+            st.link_button(plan_name, pay_url, use_container_width=True)
+        else:
+            st.error(f"无法获取 {plan_name} 的支付链接，请联系管理员")
+    # ----------------------------------
 
 # ========== 显示登录弹窗 ==========
 if st.session_state.get("show_login"):

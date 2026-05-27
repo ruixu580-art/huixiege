@@ -86,36 +86,38 @@ def show_login_ui(supabase):
                             st.error("登录失败")
                     except Exception as e:
                         st.error(f"登录失败：{str(e)}")
-
     with tab2:
         with st.form("register_form"):
             new_email = st.text_input("邮箱", placeholder="your@email.com")
             new_password = st.text_input("密码", type="password")
             confirm_password = st.text_input("确认密码", type="password")
             submitted = st.form_submit_button("注册", type="primary", use_container_width=True)
-
-            if submitted:
-                if not new_email or not new_password:
-                    st.error("请输入邮箱和密码")
-                elif new_password != confirm_password:
-                    st.error("两次输入的密码不一致")
-                else:
-                    try:
-                        response = supabase.auth.sign_up({
-                            "email": new_email,
-                            "password": new_password
-                        })
-                        if response.user:
-                            st.success("注册成功！请登录")
-                        else:
-                            st.error("注册失败")
-                    except Exception as e:
-                        st.error(f"注册失败：{str(e)}")
-                        st.code(f"详细错误：{repr(e)}")
-                        import traceback
-                        st.code(traceback.format_exc())
-    st.markdown("---")
-
+        
+        if submitted:
+            st.write(f"🔍 步骤1: 开始注册，邮箱={new_email}")
+            if not new_email or not new_password:
+                st.error("请输入邮箱和密码")
+            elif new_password != confirm_password:
+                st.error("两次输入的密码不一致")
+            else:
+                st.write("🔍 步骤2: 密码验证通过，准备调用 Supabase...")
+                try:
+                    st.write("🔍 步骤3: 正在调用 supabase.auth.sign_up...")
+                    response = supabase.auth.sign_up({
+                        "email": new_email,
+                        "password": new_password
+                    })
+                    st.write(f"🔍 步骤4: Supabase 返回响应 = {response}")
+                    if response.user:
+                        st.success("注册成功！请登录")
+                    else:
+                        st.error("注册失败：没有返回用户信息")
+                        st.write(f"响应内容: {response}")
+                except Exception as e:
+                    st.error(f"注册失败：{str(e)}")
+                    st.code(f"详细错误：{repr(e)}")
+                    import traceback
+                    st.code(traceback.format_exc())
 def logout():
     """退出登录"""
     st.session_state.user = None

@@ -26,6 +26,15 @@ def get_airtable():
 def get_user_credits(user_id):
     """查询用户剩余次数"""
     table = get_airtable()
+    
+    # 调试：读取一条已有记录，看看实际列名
+    try:
+        all_records = table.all(max_records=1)
+        if all_records:
+            st.write("实际列名：", list(all_records[0]['fields'].keys()))
+    except Exception as e:
+        st.write(f"调试失败：{e}")
+    
     formula = f"{{user_id}} = '{user_id}'"
     records = table.all(formula=formula)
     
@@ -33,19 +42,13 @@ def get_user_credits(user_id):
         return records[0]['fields'].get('credits', 0), records[0]['id']
     else:
         # 新用户，赠送 3 次试用
-        try:
-            record = table.create({
-                'user_id': user_id,
-                'user_name': user_id,
-                'credits': 3,
-                'membership_type': '试用',
-                'id': user_id  # 添加 id 列
-            })
-            return 3, record['id']
-        except Exception as e:
-            # 如果还是失败，打印错误信息
-            st.error(f"创建用户失败：{e}")
-            return 0, None
+        record = table.create({
+            'user_id': user_id,
+            'user_name': user_id,
+            'credits': 3,
+            'membership_type': '试用'
+        })
+        return 3, record['id']
 
 def update_user_credits(record_id, new_credits):
     """更新用户剩余次数"""

@@ -87,7 +87,7 @@ def show_login_ui(supabase):
                     except Exception as e:
                         st.error(f"登录失败：{str(e)}")
     
-    with tab2:
+       with tab2:
         with st.form("register_form"):
             new_email = st.text_input("邮箱", placeholder="your@email.com")
             new_password = st.text_input("密码", type="password")
@@ -110,11 +110,10 @@ def show_login_ui(supabase):
                         else:
                             st.error("注册失败")
                     except Exception as e:
-    st.error(f"注册失败：{str(e)}")
-    st.code(f"详细错误：{repr(e)}")
-    import traceback
-    st.code(traceback.format_exc())
-    st.markdown("---")
+                        st.error(f"注册失败：{str(e)}")
+                        st.code(f"详细错误：{repr(e)}")
+                        import traceback
+                        st.code(traceback.format_exc())
 def logout():
     """退出登录"""
     st.session_state.user = None

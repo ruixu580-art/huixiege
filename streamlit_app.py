@@ -53,6 +53,17 @@ def init_supabase() -> Client:
     url = st.secrets["SUPABASE_URL"]
     key = st.secrets["SUPABASE_KEY"]
     return create_client(url, key)
+    @st.cache_resource
+def init_supabase() -> Client:
+    """初始化 Supabase 客户端"""
+    url = st.secrets.get("SUPABASE_URL")
+    key = st.secrets.get("SUPABASE_KEY")
+    
+    # 调试：打印 URL 长度和内容
+    st.write(f"URL 长度: {len(url) if url else 0}")
+    st.write(f"URL 内容: {url}")
+    
+    return create_client(url, key)
 
 # ========== 登录界面（弹窗式） ==========
 def show_login_modal():

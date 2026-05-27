@@ -6,7 +6,8 @@ import json
 
 st.set_page_config(page_title="慧写歌", page_icon="🎵")
 st.image("logoPNG.png", width=80)
-st.title("🎵 慧写歌")
+# 去掉标题，因为 Logo 里已经有文字了
+# st.title("🎵 慧写歌")
 
 # ========== API Key 读取 ==========
 api_key = st.secrets.get("MUREKA_API_KEY")

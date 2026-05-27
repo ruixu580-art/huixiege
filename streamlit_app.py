@@ -11,7 +11,7 @@ col1, col2 = st.columns([1, 5])
 with col1:
     st.image("logoPNG.svg", width=80)
 with col2:
-    st.title("慧写歌")
+    st.title("")
 
 # ========== Airtable 连接 ==========
 @st.cache_resource

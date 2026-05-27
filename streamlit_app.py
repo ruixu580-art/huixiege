@@ -110,7 +110,10 @@ def show_login_ui(supabase):
                         else:
                             st.error("注册失败")
                     except Exception as e:
-                        st.error(f"注册失败：{str(e)}")
+    st.error(f"注册失败：{str(e)}")
+    st.code(f"详细错误：{repr(e)}")
+    import traceback
+    st.code(traceback.format_exc())
     st.markdown("---")
 def logout():
     """退出登录"""

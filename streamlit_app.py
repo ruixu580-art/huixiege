@@ -57,15 +57,15 @@ def show_login_ui(supabase):
     st.markdown("---")
     st.markdown("### 🔐 欢迎使用慧写歌")
     st.markdown("请登录或注册账号开始创作")
-
+    
     tab1, tab2 = st.tabs(["登录", "注册"])
-
+    
     with tab1:
         with st.form("login_form"):
             email = st.text_input("邮箱", placeholder="your@email.com")
             password = st.text_input("密码", type="password")
             submitted = st.form_submit_button("登录", type="primary", use_container_width=True)
-
+            
             if submitted:
                 if not email or not password:
                     st.error("请输入邮箱和密码")
@@ -76,48 +76,44 @@ def show_login_ui(supabase):
                             "password": password
                         })
                         if response.user:
+                            # 关键修复：同时设置 user 和 user_id
                             st.session_state.user = {
                                 "email": response.user.email,
                                 "user_id": response.user.id
                             }
+                            st.session_state.user_id = response.user.email
                             st.success(f"欢迎回来，{email}！")
                             st.rerun()
                         else:
                             st.error("登录失败")
                     except Exception as e:
                         st.error(f"登录失败：{str(e)}")
+    
     with tab2:
         with st.form("register_form"):
             new_email = st.text_input("邮箱", placeholder="your@email.com")
             new_password = st.text_input("密码", type="password")
             confirm_password = st.text_input("确认密码", type="password")
             submitted = st.form_submit_button("注册", type="primary", use_container_width=True)
-        
-        if submitted:
-            st.write(f"🔍 步骤1: 开始注册，邮箱={new_email}")
-            if not new_email or not new_password:
-                st.error("请输入邮箱和密码")
-            elif new_password != confirm_password:
-                st.error("两次输入的密码不一致")
-            else:
-                st.write("🔍 步骤2: 密码验证通过，准备调用 Supabase...")
-                try:
-                    st.write("🔍 步骤3: 正在调用 supabase.auth.sign_up...")
-                    response = supabase.auth.sign_up({
-                        "email": new_email,
-                        "password": new_password
-                    })
-                    st.write(f"🔍 步骤4: Supabase 返回响应 = {response}")
-                    if response.user:
-                        st.success("注册成功！请登录")
-                    else:
-                        st.error("注册失败：没有返回用户信息")
-                        st.write(f"响应内容: {response}")
-                except Exception as e:
-                    st.error(f"注册失败：{str(e)}")
-                    st.code(f"详细错误：{repr(e)}")
-                    import traceback
-                    st.code(traceback.format_exc())
+            
+            if submitted:
+                if not new_email or not new_password:
+                    st.error("请输入邮箱和密码")
+                elif new_password != confirm_password:
+                    st.error("两次输入的密码不一致")
+                else:
+                    try:
+                        response = supabase.auth.sign_up({
+                            "email": new_email,
+                            "password": new_password
+                        })
+                        if response.user:
+                            st.success("注册成功！请登录")
+                        else:
+                            st.error("注册失败")
+                    except Exception as e:
+                        st.error(f"注册失败：{str(e)}")
+    st.markdown("---")
 def logout():
     """退出登录"""
     st.session_state.user = None
@@ -194,16 +190,18 @@ if lyrics_source == "我自己写歌词":
 
 # 开始创作按钮
 if st.button("✨ 开始创作", type="primary", use_container_width=True):
-    # 检查登录状态
+    # 统一的登录检查
     if "user" not in st.session_state or st.session_state.user is None:
         st.warning("⚠️ 请先登录后再开始创作")
         show_login_ui(supabase)
         st.stop()
     
+    # 检查 API Key
     if not api_key:
         st.error("系统错误：API Key 未配置")
         st.stop()
     
+    # 获取用户次数
     user_email = st.session_state.user.get("email")
     credits, record_id = get_user_credits(user_email)
     
@@ -215,6 +213,7 @@ if st.button("✨ 开始创作", type="primary", use_container_width=True):
     elif lyrics_source == "我自己写歌词" and not user_lyrics.strip():
         st.error("请输入歌词内容")
     else:
+        # 生成歌词并调用 API
         if lyrics_source == "AI自动生成歌词":
             lyrics = f"""[Verse]
 {topic}的风 轻轻吹过
@@ -239,7 +238,6 @@ if st.button("✨ 开始创作", type="primary", use_container_width=True):
                     st.error("生成失败，请重试")
             else:
                 st.error("任务提交失败")
-
 # 显示已登录用户信息（如果有）
 if "user" in st.session_state and st.session_state.user is not None:
     user_email = st.session_state.user.get("email")

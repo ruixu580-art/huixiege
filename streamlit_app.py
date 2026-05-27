@@ -205,6 +205,19 @@ def fetch_audio_result(api_key, task_id):
 
 # ========== 主界面 ==========
 st.markdown("---")
+# ========== 购买套餐 ==========
+with st.expander("💰 购买创作次数", expanded=False):
+    st.markdown("选择套餐，扫码支付后获取次数")
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        st.link_button("🎵 单次体验 ¥2.99", st.secrets["MIANBAODUO_URL_SINGLE"], use_container_width=True)
+        st.link_button("📦 20次套餐 ¥29.9", st.secrets["MIANBAODUO_URL_PACK"], use_container_width=True)
+    with col2:
+        st.link_button("🌟 年卡会员 ¥299", st.secrets["MIANBAODUO_URL_YEAR"], use_container_width=True)
+        st.link_button("💎 终身会员 ¥699", st.secrets["MIANBAODUO_URL_LIFETIME"], use_container_width=True)
+    
+    st.caption("💡 支付后请将订单号发至客服邮箱：1548909523@qq.com，手动为您增加次数")
 topic = st.text_input("🎵 歌曲主题", placeholder="例如：夏天、阳光、爱情")
 style = st.selectbox("🎸 音乐风格", ["pop", "rock", "electronic", "jazz", "classical"])
 
@@ -253,6 +266,35 @@ if st.button("✨ 开始创作", type="primary"):
                     st.error("生成失败，请重试")
             else:
                 st.error("任务提交失败")
+# ========== 订单激活 ==========
+with st.expander("📦 已有订单？点击激活次数", expanded=False):
+    order_number = st.text_input("订单号", placeholder="请输入面包多订单号", key="order_input")
+    
+    if st.button("🔓 激活订单", use_container_width=True):
+        if not order_number:
+            st.error("请输入订单号")
+        elif "user" not in st.session_state or st.session_state.user is None:
+            st.warning("请先登录")
+        else:
+            user_email = st.session_state.user.get("email")
+            credits, record_id = get_user_credits(user_email)
+            
+            # 简单规则：根据订单号中的关键词判断套餐
+            order_upper = order_number.upper()
+            if "PACK20" in order_upper or "20" in order_number:
+                add_credits = 20
+            elif "YEAR" in order_upper or "299" in order_number:
+                add_credits = 300
+            elif "LIFETIME" in order_upper or "699" in order_number:
+                add_credits = 1000
+            else:
+                add_credits = 1
+            
+            update_user_credits(record_id, credits + add_credits)
+            st.success(f"✅ 激活成功！已增加 {add_credits} 次创作次数")
+            st.balloons()
+            time.sleep(1)
+            st.rerun()
 
 # ========== 页脚 ==========
 st.markdown("---")

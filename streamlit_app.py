@@ -57,15 +57,15 @@ def show_login_ui(supabase):
     st.markdown("---")
     st.markdown("### 🔐 欢迎使用慧写歌")
     st.markdown("请登录或注册账号开始创作")
-    
+
     tab1, tab2 = st.tabs(["登录", "注册"])
-    
+
     with tab1:
         with st.form("login_form"):
             email = st.text_input("邮箱", placeholder="your@email.com")
             password = st.text_input("密码", type="password")
             submitted = st.form_submit_button("登录", type="primary", use_container_width=True)
-            
+
             if submitted:
                 if not email or not password:
                     st.error("请输入邮箱和密码")
@@ -86,14 +86,14 @@ def show_login_ui(supabase):
                             st.error("登录失败")
                     except Exception as e:
                         st.error(f"登录失败：{str(e)}")
-    
-       with tab2:
+
+    with tab2:
         with st.form("register_form"):
             new_email = st.text_input("邮箱", placeholder="your@email.com")
             new_password = st.text_input("密码", type="password")
             confirm_password = st.text_input("确认密码", type="password")
             submitted = st.form_submit_button("注册", type="primary", use_container_width=True)
-            
+
             if submitted:
                 if not new_email or not new_password:
                     st.error("请输入邮箱和密码")
@@ -114,6 +114,8 @@ def show_login_ui(supabase):
                         st.code(f"详细错误：{repr(e)}")
                         import traceback
                         st.code(traceback.format_exc())
+    st.markdown("---")
+
 def logout():
     """退出登录"""
     st.session_state.user = None

@@ -32,14 +32,20 @@ def get_user_credits(user_id):
     if records:
         return records[0]['fields'].get('credits', 0), records[0]['id']
     else:
-        # 新用户，赠送 1 次试用
-        record = table.create({
-            'user_id': user_id,
-            'user_name': user_id,
-            'credits': 1,
-            'membership_type': '试用'
-        })
-        return 1, record['id']
+        # 新用户，赠送 3 次试用
+        try:
+            record = table.create({
+                'user_id': user_id,
+                'user_name': user_id,
+                'credits': 3,
+                'membership_type': '试用',
+                'id': user_id  # 添加 id 列
+            })
+            return 3, record['id']
+        except Exception as e:
+            # 如果还是失败，打印错误信息
+            st.error(f"创建用户失败：{e}")
+            return 0, None
 
 def update_user_credits(record_id, new_credits):
     """更新用户剩余次数"""

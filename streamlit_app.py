@@ -9,7 +9,7 @@ st.set_page_config(page_title="慧写歌", page_icon="🎵")
 # Logo 居中，宽度 180 像素
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
-    st.image("logoPNG.png", width=180)
+    st.image("logoPNG.svg", width=150)
 
 # ========== API Key 读取 ==========
 api_key = st.secrets.get("MUREKA_API_KEY")

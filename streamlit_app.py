@@ -157,6 +157,13 @@ if lyrics_source == "✍️ 我自己写歌词":
     user_lyrics = st.text_area("📝 请输入你的歌词", height=150)
 
 if st.button("✨ 开始创作", type="primary"):
+    # 检查登录状态（新增）
+    if not st.session_state.user_id:
+        st.warning("⚠️ 请先登录后再开始创作")
+        with st.sidebar:
+            st.info("👈 请在左侧边栏输入邮箱登录")
+        st.stop()
+    
     if not api_key:
         st.error("请先在侧边栏输入 API Key")
     elif credits <= 0:

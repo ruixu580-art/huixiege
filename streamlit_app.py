@@ -26,7 +26,7 @@ def get_airtable():
 def get_user_credits(user_id):
     """查询用户剩余次数"""
     table = get_airtable()
-    formula = f"{{user_name}} = '{user_id}'"
+    formula = f"{{user_id}} = '{user_id}'"
     records = table.all(formula=formula)
     
     if records:
@@ -34,6 +34,7 @@ def get_user_credits(user_id):
     else:
         # 新用户，赠送 1 次试用
         record = table.create({
+            'user_id': user_id,
             'user_name': user_id,
             'credits': 1,
             'membership_type': '试用'

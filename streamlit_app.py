@@ -4,7 +4,7 @@ import requests
 import time
 from pyairtable import Table
 
-st.set_page_config(page_title="慧写歌", page_icon="🎵")
+st.set_page_config(page_title="", page_icon="🎵")
 
 # Logo
 col1, col2 = st.columns([1, 5])
@@ -194,3 +194,14 @@ if st.button("✨ 开始创作", type="primary"):
                     st.error("生成失败，请重试")
             else:
                 st.error("任务提交失败")
+                # ========== 页脚 ==========
+st.markdown("---")
+st.markdown(
+    """
+    <div style="text-align: center; color: #666; padding: 20px;">
+        慧写歌 - 让每个人能轻松写歌<br>
+        歌曲精修合作请联系邮箱：<a href="mailto:1548909523@qq.com">1548909523@qq.com</a>
+    </div>
+    """,
+    unsafe_allow_html=True
+)

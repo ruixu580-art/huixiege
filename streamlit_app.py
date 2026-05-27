@@ -38,7 +38,7 @@ def get_user_credits(user_id):
             'user_name': user_id,
             'credits': 1
         })
-        return 3, record['id']
+        return 1, record['id']
 def update_user_credits(record_id, new_credits):
     """更新用户剩余次数"""
     table = get_airtable()

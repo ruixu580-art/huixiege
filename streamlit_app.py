@@ -178,22 +178,7 @@ def fetch_audio_result(api_key, task_id):
 
 # ========== 主界面 ==========
 
-# 购买套餐（始终显示，居中）
-st.markdown("---")
-st.subheader("💰 购买创作次数")
-
-col1, col2 = st.columns(2)
-with col1:
-    st.link_button("🎵 单次体验 ¥2.99", st.secrets["MIANBAODUO_URL_SINGLE"], use_container_width=True)
-    st.link_button("📦 20次套餐 ¥29.9", st.secrets["MIANBAODUO_URL_PACK"], use_container_width=True)
-with col2:
-    st.link_button("🌟 年卡会员 ¥299", st.secrets["MIANBAODUO_URL_YEAR"], use_container_width=True)
-    st.link_button("💎 终身会员 ¥699", st.secrets["MIANBAODUO_URL_LIFETIME"], use_container_width=True)
-
-st.caption("💡 支付后请将订单号发至客服邮箱：1548909523@qq.com，手动为您增加次数")
-st.markdown("---")
-
-# 歌曲创作区域
+# 歌曲创作区域（顶部）
 st.subheader("🎵 开始创作")
 
 topic = st.text_input("歌曲主题", placeholder="例如：夏天、阳光、爱情")
@@ -265,6 +250,20 @@ if "user" in st.session_state and st.session_state.user is not None:
     
     if st.button("🚪 退出登录", use_container_width=True):
         logout()
+
+# ========== 购买套餐（页脚上方） ==========
+st.markdown("---")
+st.subheader("💰 购买创作次数")
+
+col1, col2 = st.columns(2)
+with col1:
+    st.link_button("🎵 单次体验 ¥2.99", st.secrets["MIANBAODUO_URL_SINGLE"], use_container_width=True)
+    st.link_button("📦 20次套餐 ¥29.9", st.secrets["MIANBAODUO_URL_PACK"], use_container_width=True)
+with col2:
+    st.link_button("🌟 年卡会员 ¥299", st.secrets["MIANBAODUO_URL_YEAR"], use_container_width=True)
+    st.link_button("💎 终身会员 ¥699", st.secrets["MIANBAODUO_URL_LIFETIME"], use_container_width=True)
+
+st.caption("💡 支付后请将订单号发至客服邮箱：1548909523@qq.com，手动为您增加次数")
 
 # ========== 页脚 ==========
 st.markdown("---")

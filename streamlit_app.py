@@ -176,4 +176,4 @@ if st.button("✨ 开始创作", type="primary", use_container_width=True):
 
 # 页脚
 st.markdown("---")
-st.caption("🎵 慧写歌 - AI智能音乐创作 | 由 Mureka API 提供支持")
+st.caption("🎵 慧写歌 - AI智能音乐创作 | 让写歌从此变简单")

@@ -5,7 +5,14 @@ import time
 import json
 
 st.set_page_config(page_title="慧写歌", page_icon="🎵")
-st.title("🎵 慧写歌")
+
+# Logo 居中显示
+col1, col2, col3 = st.columns([1, 2, 1])
+with col2:
+    st.image("logo.png", use_container_width=True)
+
+# 标题已注释（不显示，因为 Logo 已包含文字）
+# st.title("🎵 慧写歌")
 
 # ========== API Key 读取 ==========
 api_key = st.secrets.get("MUREKA_API_KEY")

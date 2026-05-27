@@ -81,11 +81,6 @@ with st.sidebar:
     else:
         st.error("❌ API Key 未配置")
 
-# 未登录时停止
-if not st.session_state.user_id:
-    st.info("👈 请先在左侧边栏登录，即可开始创作")
-    st.stop()
-
 # 获取当前用户次数
 credits, record_id = get_user_credits(st.session_state.user_id)
 

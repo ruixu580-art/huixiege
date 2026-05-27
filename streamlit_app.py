@@ -5,12 +5,14 @@ import time
 from pyairtable import Table
 from supabase import create_client, Client
 
-st.set_page_config(page_title="慧写歌", page_icon="🎵", layout="centered")
+st.set_page_config(page_title="慧写歌", page_icon="🎵")
 
-# Logo 居中
-col1, col2, col3 = st.columns([1, 2, 1])
+# Logo
+col1, col2 = st.columns([1, 5])
+with col1:
+    st.image("logoPNG.svg", width=80)
 with col2:
-    st.image("logoPNG.svg", width=150)
+    st.write("")  # 不显示文字，Logo已包含
 
 # ========== Airtable 连接 ==========
 @st.cache_resource
@@ -31,12 +33,13 @@ def get_user_credits(user_email):
     if records:
         return records[0]['fields'].get('credits', 0), records[0]['id']
     else:
+        # 新用户，赠送 1 次试用
         record = table.create({
             'user_id': user_email,
             'user_name': user_email,
-            'credits': 0
+            'credits': 1
         })
-        return 0, record['id']
+        return 1, record['id']
 
 def update_user_credits(record_id, new_credits):
     """更新用户剩余次数"""
@@ -51,12 +54,11 @@ def init_supabase() -> Client:
     key = st.secrets["SUPABASE_KEY"]
     return create_client(url, key)
 
-# ========== 登录界面（居中） ==========
+# ========== 登录界面 ==========
 def show_login_ui(supabase):
-    """显示登录/注册界面（居中）"""
-    st.markdown("---")
+    """显示登录/注册界面"""
     st.markdown("### 🔐 欢迎使用慧写歌")
-    st.markdown("请登录或注册账号开始创作")
+    st.markdown("请登录或注册账号")
     
     tab1, tab2 = st.tabs(["登录", "注册"])
     
@@ -64,7 +66,7 @@ def show_login_ui(supabase):
         with st.form("login_form"):
             email = st.text_input("邮箱", placeholder="your@email.com")
             password = st.text_input("密码", type="password")
-            submitted = st.form_submit_button("登录", type="primary", use_container_width=True)
+            submitted = st.form_submit_button("登录", type="primary")
             
             if submitted:
                 if not email or not password:
@@ -76,12 +78,10 @@ def show_login_ui(supabase):
                             "password": password
                         })
                         if response.user:
-                            # 关键修复：同时设置 user 和 user_id
                             st.session_state.user = {
                                 "email": response.user.email,
                                 "user_id": response.user.id
                             }
-                            st.session_state.user_id = response.user.email
                             st.success(f"欢迎回来，{email}！")
                             st.rerun()
                         else:
@@ -94,7 +94,7 @@ def show_login_ui(supabase):
             new_email = st.text_input("邮箱", placeholder="your@email.com")
             new_password = st.text_input("密码", type="password")
             confirm_password = st.text_input("确认密码", type="password")
-            submitted = st.form_submit_button("注册", type="primary", use_container_width=True)
+            submitted = st.form_submit_button("注册", type="primary")
             
             if submitted:
                 if not new_email or not new_password:
@@ -112,8 +112,12 @@ def show_login_ui(supabase):
                         else:
                             st.error("注册失败")
                     except Exception as e:
-                        st.error(f"注册失败：{str(e)}")
-    st.markdown("---")
+                        error_msg = str(e)
+                        if "already registered" in error_msg.lower():
+                            st.error("该邮箱已注册，请直接登录")
+                        else:
+                            st.error(f"注册失败：{error_msg}")
+
 def logout():
     """退出登录"""
     st.session_state.user = None
@@ -121,7 +125,33 @@ def logout():
 
 # ========== API Key 读取 ==========
 api_key = st.secrets.get("MUREKA_API_KEY")
+
+# ========== 初始化 Supabase 和登录状态 ==========
 supabase = init_supabase()
+
+# 检查登录状态
+if "user" not in st.session_state or st.session_state.user is None:
+    show_login_ui(supabase)
+    st.stop()
+
+# 已登录用户
+user_email = st.session_state.user.get("email")
+credits, record_id = get_user_credits(user_email)
+
+# 侧边栏显示用户信息
+with st.sidebar:
+    st.header("👤 我的账号")
+    st.success(f"当前用户：{user_email}")
+    st.metric("🎵 剩余次数", f"{credits}次")
+    
+    if st.button("退出登录"):
+        logout()
+    
+    st.markdown("---")
+    if api_key:
+        st.success("✅ API Key 已配置")
+    else:
+        st.error("❌ API Key 未配置")
 
 # ========== 音乐生成功能 ==========
 def generate_song(api_key, lyrics, prompt, style="pop"):
@@ -174,32 +204,31 @@ def fetch_audio_result(api_key, task_id):
     return None
 
 # ========== 主界面 ==========
-if st.button("✨ 开始创作", type="primary", use_container_width=True):
-    # 统一的登录检查
-    if "user" not in st.session_state or st.session_state.user is None:
-        st.warning("⚠️ 请先登录后再开始创作")
-        show_login_ui(supabase)
-        st.stop()
-    
-    # 检查 API Key
+st.markdown("---")
+topic = st.text_input("🎵 歌曲主题", placeholder="例如：夏天、阳光、爱情")
+style = st.selectbox("🎸 音乐风格", ["pop", "rock", "electronic", "jazz", "classical"])
+
+# 歌词来源选择
+lyrics_source = st.radio("📝 歌词来源", ["🎵 AI自动生成歌词", "✍️ 我自己写歌词"], horizontal=True)
+
+user_lyrics = ""
+if lyrics_source == "✍️ 我自己写歌词":
+    user_lyrics = st.text_area("📝 请输入你的歌词", height=150)
+
+# 开始创作按钮
+if st.button("✨ 开始创作", type="primary"):
+    # 检查登录和次数
     if not api_key:
-        st.error("系统错误：API Key 未配置")
-        st.stop()
-    
-    # 获取用户次数
-    user_email = st.session_state.user.get("email")
-    credits, record_id = get_user_credits(user_email)
-    
-    if credits <= 0:
-        st.warning("⚠️ 次数不足，请先购买套餐")
-        st.stop()
+        st.error("请先在侧边栏输入 API Key")
+    elif credits <= 0:
+        st.warning("⚠️ 次数不足，请购买套餐或联系客服")
     elif not topic:
         st.error("请输入歌曲主题")
-    elif lyrics_source == "我自己写歌词" and not user_lyrics.strip():
+    elif lyrics_source == "✍️ 我自己写歌词" and not user_lyrics.strip():
         st.error("请输入歌词内容")
     else:
-        # 生成歌词并调用 API
-        if lyrics_source == "AI自动生成歌词":
+        # 生成歌词
+        if lyrics_source == "🎵 AI自动生成歌词":
             lyrics = f"""[Verse]
 {topic}的风 轻轻吹过
 唤醒心中 沉睡的梦
@@ -215,6 +244,7 @@ if st.button("✨ 开始创作", type="primary", use_container_width=True):
             if task_id:
                 audio_url = fetch_audio_result(api_key, task_id)
                 if audio_url:
+                    # 生成成功，扣减次数
                     update_user_credits(record_id, credits - 1)
                     st.success("✅ 创作完成！")
                     st.audio(audio_url, format="audio/mp3")
@@ -223,46 +253,6 @@ if st.button("✨ 开始创作", type="primary", use_container_width=True):
                     st.error("生成失败，请重试")
             else:
                 st.error("任务提交失败")
-# 歌曲创作区域（顶部）
-st.subheader("🎵 开始创作")
-
-topic = st.text_input("歌曲主题", placeholder="例如：夏天、阳光、爱情")
-style = st.selectbox("音乐风格", ["pop", "rock", "electronic", "jazz", "classical"])
-
-# 歌词来源选择
-lyrics_source = st.radio("歌词来源", ["AI自动生成歌词", "我自己写歌词"], horizontal=True)
-
-user_lyrics = ""
-if lyrics_source == "我自己写歌词":
-    user_lyrics = st.text_area("请输入你的歌词", height=150)
-
-# 开始创作按钮
-
-# 显示已登录用户信息（如果有）
-if "user" in st.session_state and st.session_state.user is not None:
-    user_email = st.session_state.user.get("email")
-    credits, record_id = get_user_credits(user_email)
-    
-    st.markdown("---")
-    st.info(f"👤 当前用户：{user_email}")
-    st.metric("🎵 剩余创作次数", f"{credits} 次")
-    
-    if st.button("🚪 退出登录", use_container_width=True):
-        logout()
-
-# ========== 购买套餐（页脚上方） ==========
-st.markdown("---")
-st.subheader("💰 购买创作次数")
-
-col1, col2 = st.columns(2)
-with col1:
-    st.link_button("🎵 单次体验 ¥2.99", st.secrets["MIANBAODUO_URL_SINGLE"], use_container_width=True)
-    st.link_button("📦 20次套餐 ¥29.9", st.secrets["MIANBAODUO_URL_PACK"], use_container_width=True)
-with col2:
-    st.link_button("🌟 年卡会员 ¥299", st.secrets["MIANBAODUO_URL_YEAR"], use_container_width=True)
-    st.link_button("💎 终身会员 ¥699", st.secrets["MIANBAODUO_URL_LIFETIME"], use_container_width=True)
-
-st.caption("💡 支付后请将订单号发至客服邮箱：1548909523@qq.com，手动为您增加次数")
 
 # ========== 页脚 ==========
 st.markdown("---")

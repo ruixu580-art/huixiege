@@ -174,21 +174,6 @@ def fetch_audio_result(api_key, task_id):
     return None
 
 # ========== 主界面 ==========
-
-# 歌曲创作区域（顶部）
-st.subheader("🎵 开始创作")
-
-topic = st.text_input("歌曲主题", placeholder="例如：夏天、阳光、爱情")
-style = st.selectbox("音乐风格", ["pop", "rock", "electronic", "jazz", "classical"])
-
-# 歌词来源选择
-lyrics_source = st.radio("歌词来源", ["AI自动生成歌词", "我自己写歌词"], horizontal=True)
-
-user_lyrics = ""
-if lyrics_source == "我自己写歌词":
-    user_lyrics = st.text_area("请输入你的歌词", height=150)
-
-# 开始创作按钮
 if st.button("✨ 开始创作", type="primary", use_container_width=True):
     # 统一的登录检查
     if "user" not in st.session_state or st.session_state.user is None:
@@ -238,6 +223,21 @@ if st.button("✨ 开始创作", type="primary", use_container_width=True):
                     st.error("生成失败，请重试")
             else:
                 st.error("任务提交失败")
+# 歌曲创作区域（顶部）
+st.subheader("🎵 开始创作")
+
+topic = st.text_input("歌曲主题", placeholder="例如：夏天、阳光、爱情")
+style = st.selectbox("音乐风格", ["pop", "rock", "electronic", "jazz", "classical"])
+
+# 歌词来源选择
+lyrics_source = st.radio("歌词来源", ["AI自动生成歌词", "我自己写歌词"], horizontal=True)
+
+user_lyrics = ""
+if lyrics_source == "我自己写歌词":
+    user_lyrics = st.text_area("请输入你的歌词", height=150)
+
+# 开始创作按钮
+
 # 显示已登录用户信息（如果有）
 if "user" in st.session_state and st.session_state.user is not None:
     user_email = st.session_state.user.get("email")

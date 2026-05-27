@@ -48,12 +48,7 @@ def update_user_credits(record_id, new_credits):
 
 # ========== Supabase 连接 ==========
 @st.cache_resource
-def init_supabase() -> Client:
-    """初始化 Supabase 客户端"""
-    url = st.secrets["SUPABASE_URL"]
-    key = st.secrets["SUPABASE_KEY"]
-    return create_client(url, key)
-    @st.cache_resource
+@st.cache_resource
 def init_supabase() -> Client:
     """初始化 Supabase 客户端"""
     url = st.secrets.get("SUPABASE_URL")

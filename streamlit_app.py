@@ -32,11 +32,11 @@ def get_user_credits(user_id):
     if records:
         return records[0]['fields'].get('credits', 0), records[0]['id']
     else:
-        # 新用户，赠送 3 次试用
+        # 新用户，赠送 1 次试用
         record = table.create({
             'user_id': user_id,
             'user_name': user_id,
-            'credits': 3
+            'credits': 1
         })
         return 3, record['id']
 def update_user_credits(record_id, new_credits):

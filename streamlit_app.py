@@ -166,8 +166,8 @@ with st.sidebar:
     st.caption("📧 邮箱：1548909523@qq.com")
 
 # ========== 音乐生成功能 ==========
-def generate_song(api_key, lyrics, prompt, style="pop"):
-    """提交歌曲生成任务"""
+def generate_song(api_key, lyrics, prompt, style="pop", duration=120):
+    """提交歌曲生成任务（时长可指定）"""
     url = "https://api.mureka.ai/v1/song/generate"
     headers = {
         "Authorization": f"Bearer {api_key}",
@@ -176,7 +176,8 @@ def generate_song(api_key, lyrics, prompt, style="pop"):
     data = {
         "lyrics": lyrics,
         "model": "auto",
-        "prompt": f"{style}, {prompt}"
+        "prompt": f"{style}, {prompt}",
+        "duration": duration  # 单位：秒
     }
     
     try:
@@ -194,11 +195,11 @@ def generate_song(api_key, lyrics, prompt, style="pop"):
         return None
 
 def fetch_audio_result(api_key, task_id):
-    """查询任务并获取歌曲链接"""
+    """查询任务并获取歌曲链接和歌词"""
     url = f"https://api.mureka.ai/v1/song/query/{task_id}"
     headers = {"Authorization": f"Bearer {api_key}"}
     
-    for i in range(40):
+    for i in range(60):  # 增加轮询次数，因为歌曲更长
         time.sleep(3)
         try:
             resp = requests.get(url, headers=headers, timeout=30)
@@ -208,12 +209,15 @@ def fetch_audio_result(api_key, task_id):
                 if status == "succeeded":
                     choices = data.get("choices", [])
                     if choices:
-                        return choices[0].get("url")
+                        audio_url = choices[0].get("url")
+                        # 获取AI返回的歌词
+                        lyrics_text = choices[0].get("lyrics", "")
+                        return audio_url, lyrics_text
                 elif status == "failed":
-                    return None
+                    return None, None
         except Exception:
             pass
-    return None
+    return None, None
 
 # ========== 主界面 ==========
 st.markdown("---")
@@ -243,6 +247,7 @@ with st.expander("💰 购买创作次数", expanded=False):
     )
     
     st.caption("💡 支付后请将订单号发至客服微信：13113021610，手动为您增加次数。若无法支付，也可联系人工客服为您解决问题")
+
 topic = st.text_input("🎵 歌曲主题", placeholder="例如：夏天、阳光、爱情")
 style = st.selectbox("🎸 音乐风格", ["pop", "rock", "electronic", "jazz", "classical"])
 
@@ -277,20 +282,31 @@ if st.button("✨ 开始创作", type="primary"):
         else:
             lyrics = user_lyrics
         
-        with st.spinner("AI正在创作中，通常需要30-90秒..."):
-            task_id = generate_song(api_key, lyrics, topic, style)
+        with st.spinner("AI正在创作中，通常需要60-120秒..."):
+            # 时长设置为 120 秒（2分钟）
+            task_id = generate_song(api_key, lyrics, topic, style, duration=120)
             if task_id:
-                audio_url = fetch_audio_result(api_key, task_id)
+                audio_url, lyrics_text = fetch_audio_result(api_key, task_id)
                 if audio_url:
                     # 生成成功，扣减次数
                     update_user_credits(record_id, credits - 1)
                     st.success("✅ 创作完成！")
+                    
+                    # 显示AI生成的歌词
+                    if lyrics_text:
+                        with st.expander("📝 查看歌词", expanded=True):
+                            st.text(lyrics_text)
+                    else:
+                        with st.expander("📝 查看歌词", expanded=True):
+                            st.text(lyrics)
+                    
                     st.audio(audio_url, format="audio/mp3")
                     st.markdown(f"[📥 点击下载歌曲]({audio_url})")
                 else:
                     st.error("生成失败，请重试")
             else:
                 st.error("任务提交失败")
+
 # ========== 订单激活 ==========
 with st.expander("📦 已有订单？点击激活次数", expanded=False):
     order_number = st.text_input("订单号", placeholder="请输入面包多订单号")
@@ -320,6 +336,7 @@ with st.expander("📦 已有订单？点击激活次数", expanded=False):
             st.balloons()
             time.sleep(1)
             st.rerun()
+
 # ========== 页脚 ==========
 st.markdown("---")
 st.markdown(

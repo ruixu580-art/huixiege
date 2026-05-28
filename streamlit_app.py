@@ -230,7 +230,7 @@ with st.expander("💰 购买创作次数", expanded=False):
         unsafe_allow_html=True
     )
     
-    st.caption("💡 支付后请将保存订单号发至客服微信：13113021610，手动为您增加次数")
+    st.caption("💡 支付后请将订单号发至客服微信：13113021610，手动为您增加次数。若无法支付，也可联系人工客服为您解决问题")
 topic = st.text_input("🎵 歌曲主题", placeholder="例如：夏天、阳光、爱情")
 style = st.selectbox("🎸 音乐风格", ["pop", "rock", "electronic", "jazz", "classical"])
 

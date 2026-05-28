@@ -209,13 +209,26 @@ st.markdown("---")
 with st.expander("💰 购买创作次数", expanded=False):
     st.markdown("选择套餐，扫码支付后获取次数")
     
-    col1, col2 = st.columns(2)
-    with col1:
-        st.link_button("🎵 单次体验 ¥2.99", st.secrets["MIANBAODUO_URL_SINGLE"], use_container_width=True)
-        st.link_button("📦 20次套餐 ¥29.9", st.secrets["MIANBAODUO_URL_PACK"], use_container_width=True)
-    with col2:
-        st.link_button("🌟 年卡会员 ¥299", st.secrets["MIANBAODUO_URL_YEAR"], use_container_width=True)
-        st.link_button("💎 终身会员 ¥699", st.secrets["MIANBAODUO_URL_LIFETIME"], use_container_width=True)
+    # 使用 st.markdown 链接，手机端稳定跳转
+    st.markdown(
+        '<a href="https://mbd.pub/o/bread/YZaTlZ9paQ==" target="_blank" rel="noopener noreferrer" style="display: block; width: 100%; background-color: #4CAF50; color: white; text-align: center; padding: 10px; margin: 5px 0; text-decoration: none; border-radius: 5px;">🎵 单次体验 ¥2.99</a>',
+        unsafe_allow_html=True
+    )
+    
+    st.markdown(
+        '<a href="https://mbd.pub/o/bread/YZaTlZ9pag==" target="_blank" rel="noopener noreferrer" style="display: block; width: 100%; background-color: #2196F3; color: white; text-align: center; padding: 10px; margin: 5px 0; text-decoration: none; border-radius: 5px;">📦 20次套餐 ¥29.9</a>',
+        unsafe_allow_html=True
+    )
+    
+    st.markdown(
+        '<a href="https://mbd.pub/o/bread/YZaTlZ9pbQ==" target="_blank" rel="noopener noreferrer" style="display: block; width: 100%; background-color: #FF9800; color: white; text-align: center; padding: 10px; margin: 5px 0; text-decoration: none; border-radius: 5px;">🌟 年卡会员 ¥299</a>',
+        unsafe_allow_html=True
+    )
+    
+    st.markdown(
+        '<a href="https://mbd.pub/o/bread/YZaTlZ9qZQ==" target="_blank" rel="noopener noreferrer" style="display: block; width: 100%; background-color: #9C27B0; color: white; text-align: center; padding: 10px; margin: 5px 0; text-decoration: none; border-radius: 5px;">💎 终身会员 ¥699</a>',
+        unsafe_allow_html=True
+    )
     
     st.caption("💡 支付后请将订单号发至客服邮箱：1548909523@qq.com，手动为您增加次数")
 topic = st.text_input("🎵 歌曲主题", placeholder="例如：夏天、阳光、爱情")

@@ -152,6 +152,17 @@ with st.sidebar:
         st.success("✅ API Key 已配置")
     else:
         st.error("❌ API Key 未配置")
+with st.sidebar:
+    st.markdown("---")
+    st.subheader("📞 联系客服")
+    
+    wechat_id = "你的微信号"
+    wechat_url = f"weixin://contacts/profile/{wechat_id}"
+    
+    st.link_button("💬 一键添加客服微信", wechat_url, use_container_width=True)
+    
+    st.caption(f"微信号：{wechat_id}")
+    st.caption("📧 邮箱：1548909523@qq.com")
 
 # ========== 音乐生成功能 ==========
 def generate_song(api_key, lyrics, prompt, style="pop"):

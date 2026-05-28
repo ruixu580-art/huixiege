@@ -16,12 +16,12 @@ with col2:
 
 # ========== Airtable 连接 ==========
 @st.cache_resource
-def get_airtable():
+def get_airtable(table_name="慧写歌用户数据"):
     """获取 Airtable 表对象"""
     return Table(
         st.secrets["AIRTABLE_TOKEN"],
         st.secrets["AIRTABLE_BASE_ID"],
-        st.secrets["AIRTABLE_TABLE_NAME"]
+        table_name
     )
 
 def get_user_credits(user_email):
@@ -45,6 +45,46 @@ def update_user_credits(record_id, new_credits):
     """更新用户剩余次数"""
     table = get_airtable()
     table.update(record_id, {'credits': new_credits})
+
+# ========== 历史记录功能 ==========
+def save_song_history(user_email, topic, style, lyrics, audio_url, vocal_gender):
+    """保存生成的歌曲到历史记录"""
+    try:
+        history_table = get_airtable("歌曲历史")
+        history_table.create({
+            "user_id": user_email,
+            "topic": topic,
+            "style": style,
+            "lyrics": lyrics,
+            "audio_url": audio_url,
+            "vocal_gender": vocal_gender,
+            "created_at": time.strftime("%Y-%m-%d %H:%M:%S")
+        })
+    except Exception as e:
+        print(f"保存历史失败：{e}")
+
+def get_song_history(user_email):
+    """获取用户的历史记录"""
+    try:
+        history_table = get_airtable("歌曲历史")
+        formula = f"{{user_id}} = '{user_email}'"
+        records = history_table.all(formula=formula, sort=[{"field": "created_at", "direction": "desc"}])
+        
+        history = []
+        for record in records:
+            fields = record['fields']
+            history.append({
+                "topic": fields.get("topic", ""),
+                "style": fields.get("style", ""),
+                "lyrics": fields.get("lyrics", ""),
+                "audio_url": fields.get("audio_url", ""),
+                "vocal_gender": fields.get("vocal_gender", ""),
+                "created_at": fields.get("created_at", "")
+            })
+        return history
+    except Exception as e:
+        print(f"获取历史失败：{e}")
+        return []
 
 # ========== Supabase 连接 ==========
 @st.cache_resource
@@ -121,6 +161,7 @@ def show_login_ui(supabase):
 def logout():
     """退出登录"""
     st.session_state.user = None
+    st.session_state.show_history = False
     st.rerun()
 
 # ========== API Key 读取 ==========
@@ -137,6 +178,10 @@ if "user" not in st.session_state or st.session_state.user is None:
 # 已登录用户
 user_email = st.session_state.user.get("email")
 credits, record_id = get_user_credits(user_email)
+
+# 初始化历史记录显示状态
+if "show_history" not in st.session_state:
+    st.session_state.show_history = False
 
 # 侧边栏显示用户信息
 with st.sidebar:
@@ -157,17 +202,24 @@ with st.sidebar:
     st.markdown("---")
     st.subheader("📞 联系客服")
     
-    wechat_id = "13113021610"  # 替换成你的微信号
+    wechat_id = "13113021610"
     wechat_url = f"weixin://contacts/profile/{wechat_id}"
     
     st.link_button("💬 请添加以下客服微信", wechat_url, use_container_width=True)
     
     st.caption(f"微信号：{wechat_id}")
     st.caption("📧 邮箱：1548909523@qq.com")
+    
+    # ========== 历史记录入口 ==========
+    st.markdown("---")
+    st.subheader("📜 我的作品")
+    if st.button("查看历史记录", use_container_width=True):
+        st.session_state.show_history = not st.session_state.show_history
+        st.rerun()
 
 # ========== 音乐生成功能 ==========
-def generate_song(api_key, lyrics, prompt, style="pop", duration=120):
-    """提交歌曲生成任务（时长可指定）"""
+def generate_song(api_key, lyrics, prompt, style="pop", duration=120, vocal_gender=None):
+    """提交歌曲生成任务（时长可指定，支持男声/女声）"""
     url = "https://api.mureka.ai/v1/song/generate"
     headers = {
         "Authorization": f"Bearer {api_key}",
@@ -179,6 +231,10 @@ def generate_song(api_key, lyrics, prompt, style="pop", duration=120):
         "prompt": f"{style}, {prompt}",
         "duration": duration  # 单位：秒
     }
+    
+    # 添加性别参数（如果用户选择了且不是"auto"）
+    if vocal_gender and vocal_gender != "auto":
+        data["vocal_gender"] = vocal_gender  # "male" 或 "female"
     
     try:
         response = requests.post(url, headers=headers, json=data, timeout=60)
@@ -221,6 +277,32 @@ def fetch_audio_result(api_key, task_id):
 
 # ========== 主界面 ==========
 st.markdown("---")
+
+# ========== 历史记录展示 ==========
+if st.session_state.show_history:
+    st.subheader("📜 我的历史作品")
+    
+    history = get_song_history(user_email)
+    
+    if not history:
+        st.info("暂无历史作品，快去创作第一首歌吧！")
+    else:
+        for i, song in enumerate(history):
+            with st.expander(f"🎵 {song['topic']} ({song['style']}) - {song['created_at']}"):
+                if song.get('vocal_gender'):
+                    st.caption(f"声音：{'👩 女声' if song['vocal_gender'] == 'female' else '👨 男声' if song['vocal_gender'] == 'male' else '🎵 自动'}")
+                st.caption(f"风格：{song['style']}")
+                with st.expander("📝 查看歌词", expanded=False):
+                    st.text(song['lyrics'])
+                st.audio(song['audio_url'], format="audio/mp3")
+                st.markdown(f"[📥 下载歌曲]({song['audio_url']})")
+    
+    if st.button("← 返回创作"):
+        st.session_state.show_history = False
+        st.rerun()
+    
+    st.markdown("---")
+
 # ========== 购买套餐 ==========
 with st.expander("💰 购买创作次数", expanded=False):
     st.markdown("选择套餐，支付后自动获取次数（支付后请用订单号激活）")
@@ -248,64 +330,79 @@ with st.expander("💰 购买创作次数", expanded=False):
     
     st.caption("💡 支付后请将订单号发至客服微信：13113021610，手动为您增加次数。若无法支付，也可联系人工客服为您解决问题")
 
-topic = st.text_input("🎵 歌曲主题", placeholder="例如：夏天、阳光、爱情")
-style = st.selectbox("🎸 音乐风格", ["pop", "rock", "electronic", "jazz", "classical"])
-
-# 歌词来源选择
-lyrics_source = st.radio("📝 歌词来源", ["🎵 AI自动生成歌词", "✍️ 我自己写歌词"], horizontal=True)
-
-user_lyrics = ""
-if lyrics_source == "✍️ 我自己写歌词":
-    user_lyrics = st.text_area("📝 请输入你的歌词", height=150)
-
-# 开始创作按钮
-if st.button("✨ 开始创作", type="primary"):
-    # 检查登录和次数
-    if not api_key:
-        st.error("请先在侧边栏输入 API Key")
-    elif credits <= 0:
-        st.warning("⚠️ 次数不足，请购买套餐或联系客服")
-    elif not topic:
-        st.error("请输入歌曲主题")
-    elif lyrics_source == "✍️ 我自己写歌词" and not user_lyrics.strip():
-        st.error("请输入歌词内容")
-    else:
-        # 生成歌词
-        if lyrics_source == "🎵 AI自动生成歌词":
-            lyrics = f"""[Verse]
+# 只有在非历史记录模式时才显示创作界面
+if not st.session_state.show_history:
+    topic = st.text_input("🎵 歌曲主题", placeholder="例如：夏天、阳光、爱情")
+    style = st.selectbox("🎸 音乐风格", ["pop", "rock", "electronic", "jazz", "classical"])
+    
+    # ========== 声音选择 ==========
+    vocal_gender = st.radio(
+        "🎤 演唱者声音",
+        ["auto", "female", "male"],
+        format_func=lambda x: {"auto": "🎵 自动", "female": "👩 女声", "male": "👨 男声"}[x],
+        horizontal=True,
+        help="选择AI演唱的声音性别"
+    )
+    
+    # 歌词来源选择
+    lyrics_source = st.radio("📝 歌词来源", ["🎵 AI自动生成歌词", "✍️ 我自己写歌词"], horizontal=True)
+    
+    user_lyrics = ""
+    if lyrics_source == "✍️ 我自己写歌词":
+        user_lyrics = st.text_area("📝 请输入你的歌词", height=150)
+    
+    # 开始创作按钮
+    if st.button("✨ 开始创作", type="primary"):
+        # 检查登录和次数
+        if not api_key:
+            st.error("请先在侧边栏输入 API Key")
+        elif credits <= 0:
+            st.warning("⚠️ 次数不足，请购买套餐或联系客服")
+        elif not topic:
+            st.error("请输入歌曲主题")
+        elif lyrics_source == "✍️ 我自己写歌词" and not user_lyrics.strip():
+            st.error("请输入歌词内容")
+        else:
+            # 生成歌词
+            if lyrics_source == "🎵 AI自动生成歌词":
+                lyrics = f"""[Verse]
 {topic}的风 轻轻吹过
 唤醒心中 沉睡的梦
 
 [Chorus]
 让全世界 听见这旋律
 属于我们 灿烂的奇迹"""
-        else:
-            lyrics = user_lyrics
-        
-        with st.spinner("AI正在创作中，通常需要60-120秒..."):
-            # 时长设置为 120 秒（2分钟）
-            task_id = generate_song(api_key, lyrics, topic, style, duration=120)
-            if task_id:
-                audio_url, lyrics_text = fetch_audio_result(api_key, task_id)
-                if audio_url:
-                    # 生成成功，扣减次数
-                    update_user_credits(record_id, credits - 1)
-                    st.success("✅ 创作完成！")
-                    
-                    # 显示AI生成的歌词
-                    if lyrics_text:
-                        with st.expander("📝 查看歌词", expanded=True):
-                            st.text(lyrics_text)
-                    else:
-                        with st.expander("📝 查看歌词", expanded=True):
-                            st.text(lyrics)
-                    
-                    st.audio(audio_url, format="audio/mp3")
-                    st.markdown(f"[📥 点击下载歌曲]({audio_url})")
-                else:
-                    st.error("生成失败，请重试")
             else:
-                st.error("任务提交失败")
+                lyrics = user_lyrics
+            
+            with st.spinner("AI正在创作中，通常需要60-120秒..."):
+                # 时长设置为 120 秒（2分钟）
+                task_id = generate_song(api_key, lyrics, topic, style, duration=120, vocal_gender=vocal_gender)
+                if task_id:
+                    audio_url, lyrics_text = fetch_audio_result(api_key, task_id)
+                    if audio_url:
+                        # 生成成功，扣减次数
+                        update_user_credits(record_id, credits - 1)
+                        
+                        # 保存历史记录
+                        save_song_history(user_email, topic, style, lyrics_text if lyrics_text else lyrics, audio_url, vocal_gender)
+                        
+                        st.success("✅ 创作完成！")
+                        
+                        # 显示AI生成的歌词
+                        if lyrics_text:
+                            with st.expander("📝 查看歌词", expanded=True):
+                                st.text(lyrics_text)
+                        else:
+                            with st.expander("📝 查看歌词", expanded=True):
+                                st.text(lyrics)
+                        
+                        st.audio(audio_url, format="audio/mp3")
+                        st.markdown(f"[📥 点击下载歌曲]({audio_url})")
+                    else:
+                        st.error("生成失败，请重试")
+                else:
+                    st.error("任务提交失败")
 
 # ========== 订单激活 ==========
 with st.expander("📦 已有订单？点击激活次数", expanded=False):

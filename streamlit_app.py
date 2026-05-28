@@ -369,10 +369,10 @@ with st.expander("💰 购买创作次数", expanded=False):
     # 显示二维码
     col1, col2 = st.columns(2)
     with col1:
-        st.image("wechat_pay.png", width=200, caption="微信支付")
+        st.image("wechat_pay.jpg", width=200, caption="微信支付")
         st.caption("微信扫一扫，输入对应金额")
     with col2:
-        st.image("alipay_pay.png", width=200, caption="支付宝支付")
+        st.image("alipay_pay.jpg", width=200, caption="支付宝支付")
         st.caption("支付宝扫一扫，输入对应金额")
     
     st.markdown("**📝 支付后请填写以下信息：**")

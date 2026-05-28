@@ -205,6 +205,32 @@ def fetch_audio_result(api_key, task_id):
 
 # ========== 主界面 ==========
 st.markdown("---")
+# ========== 购买套餐 ==========
+with st.expander("💰 购买创作次数", expanded=False):
+    st.markdown("选择套餐，支付后自动获取次数（支付后请用订单号激活）")
+    
+    # 使用 HTML 链接，手机端稳定跳转
+    st.markdown(
+        '<a href="https://mbd.pub/o/bread/YZaTlZ9paQ==" target="_blank" rel="noopener noreferrer" style="display: block; width: 100%; background-color: #4CAF50; color: white; text-align: center; padding: 10px; margin: 5px 0; text-decoration: none; border-radius: 5px;">🎵 单次体验 ¥2.99</a>',
+        unsafe_allow_html=True
+    )
+    
+    st.markdown(
+        '<a href="https://mbd.pub/o/bread/YZaTlZ9pag==" target="_blank" rel="noopener noreferrer" style="display: block; width: 100%; background-color: #2196F3; color: white; text-align: center; padding: 10px; margin: 5px 0; text-decoration: none; border-radius: 5px;">📦 20次套餐 ¥29.9</a>',
+        unsafe_allow_html=True
+    )
+    
+    st.markdown(
+        '<a href="https://mbd.pub/o/bread/YZaTlZ9pbQ==" target="_blank" rel="noopener noreferrer" style="display: block; width: 100%; background-color: #FF9800; color: white; text-align: center; padding: 10px; margin: 5px 0; text-decoration: none; border-radius: 5px;">🌟 年卡会员 ¥299</a>',
+        unsafe_allow_html=True
+    )
+    
+    st.markdown(
+        '<a href="https://mbd.pub/o/bread/YZaTlZ9qZQ==" target="_blank" rel="noopener noreferrer" style="display: block; width: 100%; background-color: #9C27B0; color: white; text-align: center; padding: 10px; margin: 5px 0; text-decoration: none; border-radius: 5px;">💎 终身会员 ¥699</a>',
+        unsafe_allow_html=True
+    )
+    
+    st.caption("💡 支付后请将保存订单号发至客服微信：13113021610，手动为您增加次数")
 topic = st.text_input("🎵 歌曲主题", placeholder="例如：夏天、阳光、爱情")
 style = st.selectbox("🎸 音乐风格", ["pop", "rock", "electronic", "jazz", "classical"])
 

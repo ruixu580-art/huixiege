@@ -157,7 +157,7 @@ with st.sidebar:
     st.markdown("---")
     st.subheader("📞 联系客服")
     
-    wechat_id = "你的微信号"  # 替换成你的微信号
+    wechat_id = "13113021610"  # 替换成你的微信号
     wechat_url = f"weixin://contacts/profile/{wechat_id}"
     
     st.link_button("💬 一键添加客服微信", wechat_url, use_container_width=True)

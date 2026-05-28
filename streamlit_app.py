@@ -160,7 +160,7 @@ with st.sidebar:
     wechat_id = "13113021610"  # 替换成你的微信号
     wechat_url = f"weixin://contacts/profile/{wechat_id}"
     
-    st.link_button("💬 一键添加客服微信", wechat_url, use_container_width=True)
+    st.link_button("💬 请添加以下客服微信", wechat_url, use_container_width=True)
     
     st.caption(f"微信号：{wechat_id}")
     st.caption("📧 邮箱：1548909523@qq.com")

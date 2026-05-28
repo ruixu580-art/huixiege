@@ -86,6 +86,23 @@ def get_song_history(user_email):
         print(f"获取历史失败：{e}")
         return []
 
+# ========== 支付记录功能 ==========
+def save_payment_record(user_email, amount, order_id):
+    """保存支付记录到Airtable"""
+    try:
+        pay_table = get_airtable("支付记录")
+        pay_table.create({
+            "user_id": user_email,
+            "amount": amount,
+            "order_id": order_id,
+            "status": "待核实",
+            "created_at": time.strftime("%Y-%m-%d %H:%M:%S")
+        })
+        return True
+    except Exception as e:
+        print(f"保存支付记录失败：{e}")
+        return False
+
 # ========== Supabase 连接 ==========
 @st.cache_resource
 def init_supabase() -> Client:
@@ -305,30 +322,77 @@ if st.session_state.show_history:
 
 # ========== 购买套餐 ==========
 with st.expander("💰 购买创作次数", expanded=False):
-    st.markdown("选择套餐，支付后自动获取次数（支付后请用订单号激活）")
+    st.markdown("### 🍞 方式一：面包多支付（推荐）")
+    st.markdown("点击按钮跳转支付，支付后使用订单号激活")
     
-    # 使用 HTML 链接，手机端稳定跳转
-    st.markdown(
-        '<a href="https://mbd.pub/o/bread/YZaTlZ9paQ==" target="_blank" rel="noopener noreferrer" style="display: block; width: 100%; background-color: #4CAF50; color: white; text-align: center; padding: 10px; margin: 5px 0; text-decoration: none; border-radius: 5px;">🎵 单次体验 ¥2.99</a>',
-        unsafe_allow_html=True
+    # 面包多支付链接（保留原有）
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown(
+            '<a href="https://mbd.pub/o/bread/YZaTlZ9paQ==" target="_blank" rel="noopener noreferrer" style="display: block; width: 100%; background-color: #4CAF50; color: white; text-align: center; padding: 10px; margin: 5px 0; text-decoration: none; border-radius: 5px;">🎵 单次体验 ¥2.99</a>',
+            unsafe_allow_html=True
+        )
+        st.markdown(
+            '<a href="https://mbd.pub/o/bread/YZaTlZ9pag==" target="_blank" rel="noopener noreferrer" style="display: block; width: 100%; background-color: #2196F3; color: white; text-align: center; padding: 10px; margin: 5px 0; text-decoration: none; border-radius: 5px;">📦 20次套餐 ¥29.9</a>',
+            unsafe_allow_html=True
+        )
+    with col2:
+        st.markdown(
+            '<a href="https://mbd.pub/o/bread/YZaTlZ9pbQ==" target="_blank" rel="noopener noreferrer" style="display: block; width: 100%; background-color: #FF9800; color: white; text-align: center; padding: 10px; margin: 5px 0; text-decoration: none; border-radius: 5px;">🌟 年卡会员 ¥299</a>',
+            unsafe_allow_html=True
+        )
+        st.markdown(
+            '<a href="https://mbd.pub/o/bread/YZaTlZ9qZQ==" target="_blank" rel="noopener noreferrer" style="display: block; width: 100%; background-color: #9C27B0; color: white; text-align: center; padding: 10px; margin: 5px 0; text-decoration: none; border-radius: 5px;">💎 终身会员 ¥699</a>',
+            unsafe_allow_html=True
+        )
+    
+    st.caption("💡 支付后请将订单号填入下方「订单激活」区域，自动增加次数")
+    
+    st.markdown("---")
+    st.markdown("### 📱 方式二：微信/支付宝扫码支付（备用）")
+    st.markdown("如果面包多跳转失败，可以使用以下方式支付")
+    st.warning("⚠️ **请务必支付正确的金额**：单次2.99元、20次29.9元、年卡299元、终身699元。支付其他金额将无法处理。")
+    
+    # 套餐金额选择
+    pay_amount = st.selectbox(
+        "选择套餐金额",
+        [2.99, 29.9, 299, 699],
+        format_func=lambda x: f"{x}元" + (
+            " (单次体验/1次)" if x == 2.99 else 
+            " (20次套餐/20次)" if x == 29.9 else 
+            " (年卡会员/300次)" if x == 299 else 
+            " (终身会员/1000次)"
+        ),
+        key="pay_amount"
     )
     
-    st.markdown(
-        '<a href="https://mbd.pub/o/bread/YZaTlZ9pag==" target="_blank" rel="noopener noreferrer" style="display: block; width: 100%; background-color: #2196F3; color: white; text-align: center; padding: 10px; margin: 5px 0; text-decoration: none; border-radius: 5px;">📦 20次套餐 ¥29.9</a>',
-        unsafe_allow_html=True
-    )
+    # 显示二维码
+    col1, col2 = st.columns(2)
+    with col1:
+        st.image("wechat_pay.png", width=200, caption="微信支付")
+        st.caption("微信扫一扫，输入对应金额")
+    with col2:
+        st.image("alipay_pay.png", width=200, caption="支付宝支付")
+        st.caption("支付宝扫一扫，输入对应金额")
     
-    st.markdown(
-        '<a href="https://mbd.pub/o/bread/YZaTlZ9pbQ==" target="_blank" rel="noopener noreferrer" style="display: block; width: 100%; background-color: #FF9800; color: white; text-align: center; padding: 10px; margin: 5px 0; text-decoration: none; border-radius: 5px;">🌟 年卡会员 ¥299</a>',
-        unsafe_allow_html=True
-    )
+    st.markdown("**📝 支付后请填写以下信息：**")
     
-    st.markdown(
-        '<a href="https://mbd.pub/o/bread/YZaTlZ9qZQ==" target="_blank" rel="noopener noreferrer" style="display: block; width: 100%; background-color: #9C27B0; color: white; text-align: center; padding: 10px; margin: 5px 0; text-decoration: none; border-radius: 5px;">💎 终身会员 ¥699</a>',
-        unsafe_allow_html=True
-    )
+    col1, col2 = st.columns(2)
+    with col1:
+        pay_email = st.text_input("你的邮箱", placeholder="用于接收创作次数", key="pay_email")
+    with col2:
+        pay_order_id = st.text_input("订单号/交易号", placeholder="支付后复制订单号填入", key="pay_order_id")
     
-    st.caption("💡 支付后请将订单号发至客服微信：13113021610，手动为您增加次数。若无法支付，也可联系人工客服为您解决问题")
+    if st.button("✅ 提交支付信息", use_container_width=True, key="submit_pay"):
+        if not pay_email or not pay_order_id:
+            st.error("请填写邮箱和订单号")
+        else:
+            if save_payment_record(pay_email, pay_amount, pay_order_id):
+                st.success(f"✅ 提交成功！客服将尽快核实并为您增加次数")
+                st.info("💡 请保留订单号截图，如有问题请联系客服微信：13113021610")
+                st.balloons()
+            else:
+                st.error(f"提交失败，请联系客服微信：13113021610 手动处理")
 
 # 只有在非历史记录模式时才显示创作界面
 if not st.session_state.show_history:

@@ -381,7 +381,7 @@ with st.expander("💰 购买创作次数", expanded=False):
     with col1:
         pay_email = st.text_input("你的邮箱", placeholder="用于接收创作次数", key="pay_email")
     with col2:
-        pay_order_id = st.text_input("订单号/交易号", placeholder="支付后复制订单号填入", key="pay_order_id")
+        pay_order_id = st.text_input("订单号/交易号/其他备注", placeholder="填入支付订单号或支付金额", key="pay_order_id")
     
     if st.button("✅ 提交支付信息", use_container_width=True, key="submit_pay"):
         if not pay_email or not pay_order_id:
